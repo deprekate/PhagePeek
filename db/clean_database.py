@@ -3,8 +3,8 @@ import os
 import re
 import warnings
 
-sys.path.append(os.path.dirname(os.path.realpath(__file__))+'/lib')
-import functions
+#sys.path.append(os.path.dirname(os.path.realpath(__file__))+'/lib')
+from modules.functions import functions
 
 from ete3 import NCBITaxa
 import ssl
