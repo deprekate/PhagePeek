@@ -1,10 +1,10 @@
 import sys
 import os
 import re
+import argparse
+from argparse import RawTextHelpFormatter
+import gzip
 import warnings
-
-#sys.path.append(os.path.dirname(os.path.realpath(__file__))+'/lib')
-from modules.functions import functions
 
 from ete3 import NCBITaxa
 import ssl
@@ -27,14 +27,18 @@ ncbi = NCBITaxa()
 #print( [names[taxid] for taxid in lineage] )
 #exit()
 
+
+def is_valid_file(x):
+        if not os.path.exists(x):
+                raise argparse.ArgumentTypeError("{0} does not exist".format(x))
+        return x
+
 class SequenceRead:
 	"""A single equence read class"""
 	head = ''
 	data = ''
 	def __repr__(self):
 		return self.head + self.data
-
-args = functions.get_args()
 
 def sequence_good(seq):
 	match = uniprot_ox.search(seq.head)
@@ -51,11 +55,20 @@ def sequence_good(seq):
 			pass
 	return False
 
+
+usage = 'clean_database.py [-opt1, [-opt2, ...]] infile'
+parser = argparse.ArgumentParser(description='A program to clean fasta formatted sequence databases', formatter_class=RawTextHelpFormatter, usage=usage)
+parser.add_argument('infile', type=is_valid_file, help='input file in fasta format')
+parser.add_argument('-i', '--include', action="store", default="", dest='good_term', help='sequence read header must contain this string')
+parser.add_argument('-e', '--exclude', action="store", default="xxx", dest='bad_term', help='sequence read header must NOT contain this string')
+args = parser.parse_args()
+
 uniprot_ox = re.compile('OX=(\d+)')
 
 seq = SequenceRead()
-with open(args.infile) as f:
+with gzip.open(args.infile) as f:
 	for line in f:
+		line = line.decode('utf-8')
 		if line.startswith('>'):
 			if args.good_term.upper() in seq.head.upper() and not args.bad_term.upper() in seq.head.upper() and sequence_good(seq):
 				print(seq)
